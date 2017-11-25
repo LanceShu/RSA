@@ -21,7 +21,7 @@ public class RSA {
 
     public static void main(String[] args) throws IOException {
 
-        long start  = System.currentTimeMillis();
+//        long start  = System.currentTimeMillis();
         createPQ();
         System.out.println("p:"+ p+"  ,q:"+q);
         calculateNT();
@@ -33,14 +33,37 @@ public class RSA {
         d = e.modPow(BigInteger.valueOf(-1),t);
         System.out.println("私钥d : " + "" + d);
 
-        fileName = "E:/Java/RSA.txt";
-        encryptFile(fileName);
+//        fileName = "E:/Java/RSA.txt";
+//        encryptFile(fileName);
+//
+//        fileName = "E:/Java/RSA.txt";
+//        decryptFile(fileName);
 
-        fileName = "E:/Java/rsb.txt";
-        decryptFile(fileName);
+        while(true){
+            System.out.println("请选择功能(暂时仅支持.txt文件加密)：\n1.加密\t2.解密\t0.退出");
+            System.out.println("请选择：");
+            int choose = input.nextInt();
+            switch (choose){
+                case 1:
+                    System.out.println("\n请输入文件的完整路径：");
+                    encryptFile(input.next());
+                    System.out.println("\n加密成功~\n");
+                    break;
+                case 2:
+                    System.out.println("\n请输入文件的完整路径：");
+                    decryptFile(input.next());
+                    System.out.println("\n解密成功~\n");
+                    break;
+                case 0:
+                    break;
+                default:
+                    System.out.println("\n输入有误~请重新输入");
+                    break;
+            }
+        }
 
-        long end = System.currentTimeMillis();
-        System.out.println("\n\n总耗时：" + (end - start) + " ms");
+//        long end = System.currentTimeMillis();
+//        System.out.println("\n\n总耗时：" + (end - start) + " ms");
 
     }
 
@@ -155,16 +178,6 @@ public class RSA {
 
         ArrayList<String> strings = new ArrayList<>();
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-        File file = new File("E:/Java/rsb.txt");
-        if(file.exists()){
-            file.delete();
-        }
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("E:/Java/rsb.txt",true)));
-        String ds = d.toString()+"\n";
-        bw.write(ds,0,ds.length());
-        String ns = n.toString()+"\n";
-        bw.write(ns,0,ns.length());
-
         String len = "";
         StringBuilder s = new StringBuilder();
         while( (len = br.readLine()) != null){
@@ -172,6 +185,16 @@ public class RSA {
         }
         String ss = new String(s.toString());
         br.close();
+
+        File file = new File(fileName);
+        if(file.exists()){
+            file.delete();
+        }
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName,true)));
+        String ds = d.toString()+"\n";
+        bw.write(ds,0,ds.length());
+        String ns = n.toString()+"\n";
+        bw.write(ns,0,ns.length());
 
         System.out.println("\n解密前明文 m = " + ss);
 
@@ -214,25 +237,38 @@ public class RSA {
      * */
     private static void decryptFile(String fileName)throws IOException{
 
+//        System.out.println("fileName"+fileName);
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-        System.out.println("\nsss:"+br.readLine());
-        d = new BigInteger(br.readLine());
-        System.out.println("\ndddd:"+br.readLine());
-        n = new BigInteger(br.readLine());
         String ctext = "";
 
         System.out.print("\n解密后明文 m = ");
+        int a = 0;
+        StringBuilder builder = new StringBuilder();
         while((ctext = br.readLine()) != null){
-            BigInteger c = new BigInteger(ctext);
-            BigInteger m = c.modPow(d,n);
-            byte[] mt = m.toByteArray();
-            for(int i = 0;i<mt.length;i++){
-                System.out.print((char) mt[i]);
+            a++;
+            if(a == 1){
+                d = BigInteger.valueOf(Long.parseLong(ctext));
+            }else if(a == 2){
+                n = BigInteger.valueOf(Long.parseLong(ctext));
+            }else{
+                BigInteger c = new BigInteger(ctext);
+                BigInteger m = c.modPow(d,n);
+                byte[] mt = m.toByteArray();
+                for(int i = 0;i<mt.length;i++){
+                    builder.append((char) mt[i]);
+                }
             }
         }
+        System.out.println(builder.toString());
         br.close();
 
-
+        File file = new File(fileName);
+        if(file.exists()){
+            file.delete();
+        }
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName,true)));
+        bw.write(builder.toString(),0,builder.toString().length());
+        bw.close();
     }
 
 }
