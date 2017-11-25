@@ -160,6 +160,10 @@ public class RSA {
             file.delete();
         }
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("E:/Java/rsb.txt",true)));
+        String ds = d.toString()+"\n";
+        bw.write(ds,0,ds.length());
+        String ns = n.toString()+"\n";
+        bw.write(ns,0,ns.length());
 
         String len = "";
         StringBuilder s = new StringBuilder();
@@ -211,6 +215,10 @@ public class RSA {
     private static void decryptFile(String fileName)throws IOException{
 
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+        System.out.println("\nsss:"+br.readLine());
+        d = new BigInteger(br.readLine());
+        System.out.println("\ndddd:"+br.readLine());
+        n = new BigInteger(br.readLine());
         String ctext = "";
 
         System.out.print("\n解密后明文 m = ");
