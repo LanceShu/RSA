@@ -2,6 +2,7 @@ import java.io.*;
 import java.math.BigInteger;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class RSA {
@@ -20,6 +21,7 @@ public class RSA {
 
     public static void main(String[] args) throws IOException {
 
+        long start  = System.currentTimeMillis();
         createPQ();
         System.out.println("p:"+ p+"  ,q:"+q);
         calculateNT();
@@ -37,63 +39,9 @@ public class RSA {
         fileName = "E:/Java/rsb.txt";
         decryptFile(fileName);
 
-//        while(true){
-//            System.out.println("\n\n请选择您要执行的操作：\n1.加密文件\n2.解密文件\n0.退出");
-//            System.out.print("请选择：");
-//            int choose = input.nextInt();
-//            switch (choose){
-//                case 1:
-////                    System.out.println("请输入文件路径：");
-////                    fileName = input.nextLine();
-//                    fileName = "E:\\Java\\RSA.txt";
-//                    encryptFile(fileName);
-//                    break;
-//                case 2:
-//                    break;
-//                case 0:
-//                    System.exit(0);
-//                    break;
-//                default:
-//                    System.out.println("功能序号输入有误,请重新输入~");
-//                    break;
-//            }
-//        }
-    }
+        long end = System.currentTimeMillis();
+        System.out.println("\n\n总耗时：" + (end - start) + " ms");
 
-    /**
-     * 暂时无用：
-     * 计算私钥d；
-     * */
-    private static BigInteger[] calculateD(){
-        BigInteger[] ret = new BigInteger[3];
-        BigInteger u  = BigInteger.valueOf(1);
-        BigInteger u1 = BigInteger.valueOf(0);
-        BigInteger v = BigInteger.valueOf(0);
-        BigInteger v1 = BigInteger.valueOf(1);
-        if(e.compareTo(t) > 0){
-            System.out.println("1111"+e+","+t);
-            BigInteger tem = t;
-            t = e;
-            e = tem;
-        }
-
-        while(e.compareTo(BigInteger.valueOf(0)) != 0){
-            BigInteger tq = t.divide(e);
-            BigInteger tu = u;
-            u = u1;
-            u1 = tu.subtract(tq.multiply(u1));
-            BigInteger tv = v;
-            v = v1;
-            v1 = tv.subtract(tq.multiply(v1));
-            BigInteger td1 = t;
-            t = e;
-            e = td1.subtract(tq.multiply(e));
-            ret[0] = u;
-            ret[1] = v;
-            ret[2] = t;
-            System.out.println("2222"+e+","+t);
-        }
-        return ret;
     }
 
     /**
@@ -103,8 +51,8 @@ public class RSA {
         int s = t.intValue();
 
         while(true){
-            e = BigInteger.valueOf((int)(Math.random() * s / 666 - 5000));
-            if(e.intValue() > 9999 && e.intValue() < 20000){
+            e = BigInteger.valueOf((int)(Math.random() * s / 666));
+            if(e.intValue() > 9999 && e.intValue() < 100000){
                 if(isPrime(e.intValue()) ){
                     break;
                 }
@@ -205,7 +153,14 @@ public class RSA {
      * */
     private static void encryptFile(String fileName) throws IOException {
 
+        ArrayList<String> strings = new ArrayList<>();
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+        File file = new File("E:/Java/rsb.txt");
+        if(file.exists()){
+            file.delete();
+        }
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("E:/Java/rsb.txt",true)));
+
         String len = "";
         StringBuilder s = new StringBuilder();
         while( (len = br.readLine()) != null){
@@ -214,18 +169,39 @@ public class RSA {
         String ss = new String(s.toString());
         br.close();
 
-        System.out.println("m = " + ss);
-        byte[] mtext = ss.getBytes("UTF-8");
-        BigInteger m = new BigInteger(mtext);
+        System.out.println("\n解密前明文 m = " + ss);
 
-        System.out.println(m);
-        BigInteger c = m.modPow(e,n);
+        int length;
+        if(ss.length()%3 == 0){
+            length = ss.length() /3;
+            for(int i = 0;i<length;i++){
+                strings.add(ss.substring(i*3,i*3+3));
+            }
+        }else {
+            int a;
+            length = ss.length() / 3 +1;
+            for(a = 0;a<length-1;a++){
+                strings.add(ss.substring(a*3,a*3+3));
+            }
+            strings.add(ss.substring(a*3,ss.length()));
+        }
 
-        String cs = c.toString();
-        System.out.println("c = " + cs);
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("E:/Java/rsb.txt")));
-        bw.write(cs,0,cs.length());
+        ArrayList<String> ctext = new ArrayList<>();
+        for(int i = 0;i<strings.size();i++){
+            byte[] mtext = strings.get(i).getBytes("UTF-8");
+            BigInteger m = new BigInteger(mtext);
+            BigInteger c = m.modPow(e,n);
+            String cs = c.toString()+"\n";
+            ctext.add(c.toString());
+
+            bw.write(cs,0,cs.length());
+        }
         bw.close();
+
+        System.out.print("密文 c = ");
+        for(int i = 0 ;i<ctext.size();i++){
+            System.out.print(ctext.get(i));
+        }
 
     }
 
@@ -235,17 +211,19 @@ public class RSA {
     private static void decryptFile(String fileName)throws IOException{
 
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-        String ctext = br.readLine();
-        br.close();
-        BigInteger c = new BigInteger(ctext);
+        String ctext = "";
 
-        System.out.println(c);
-        BigInteger m = c.modPow(d,n);
-        byte[] mt = m.toByteArray();
-        System.out.print("m = ");
-        for(int i = 0;i<mt.length;i++){
-            System.out.print((char) mt[i]);
+        System.out.print("\n解密后明文 m = ");
+        while((ctext = br.readLine()) != null){
+            BigInteger c = new BigInteger(ctext);
+            BigInteger m = c.modPow(d,n);
+            byte[] mt = m.toByteArray();
+            for(int i = 0;i<mt.length;i++){
+                System.out.print((char) mt[i]);
+            }
         }
+        br.close();
+
 
     }
 
